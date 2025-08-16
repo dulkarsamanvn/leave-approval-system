@@ -4,6 +4,8 @@ import LoginPage from './pages/LoginPage'
 import { Toaster } from 'react-hot-toast'
 import ManagerDashboard from './pages/ManagerDashboard'
 import EmployeeDashboard from './pages/EmployeeDashboard'
+import PublicRoute from './routes/PublicRoute'
+import ProtectedRoute from './routes/ProtectedRoute'
 
 function App() {
   return (
@@ -11,9 +13,21 @@ function App() {
       <Toaster/>
       <Routes>
         <Route path='/' element={<Navigate to='/login' replace />} />
-        <Route path='/login' element={<LoginPage/>}/>
-        <Route path='/manager-dashboard' element={<ManagerDashboard/>}/>
-        <Route path='/employee-dashboard' element={<EmployeeDashboard/>}/>
+        <Route path='/login' element={
+          <PublicRoute>
+            <LoginPage/>
+          </PublicRoute>
+          }/>
+        <Route path='/manager-dashboard' element={
+          <ProtectedRoute>
+            <ManagerDashboard/>
+          </ProtectedRoute>
+          }/>
+        <Route path='/employee-dashboard' element={
+          <ProtectedRoute>
+            <EmployeeDashboard/>
+          </ProtectedRoute>
+          }/>
       </Routes>
     </Router>
   )

@@ -5,6 +5,7 @@ from leave.serializers import ApplyLeaveSerializer,LeaveSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from leave.models import Leave
+from django.db.models import Count
 # Create your views here.
 
 class ApplyLeaveRequestView(APIView):
@@ -25,9 +26,9 @@ class GetLeavesView(APIView):
     def get(self,request):
         user=request.user
         if user.role=='manager':
-            leaves=Leave.objects.all()
+            leaves=Leave.objects.all().order_by('-applied_on')
         if user.role=='employee':
-            leaves=Leave.objects.filter(employee=user)
+            leaves=Leave.objects.filter(employee=user).order_by('-applied_on')
         serializer=LeaveSerializer(leaves,many=True)
         return Response({
             'role':user.role,
@@ -50,3 +51,17 @@ class UpdateStatusView(APIView):
         leave.status=leave_status
         leave.save()
         return Response({'message':'Leave updated successfully'})
+
+
+
+class EmployeeLeaveSummaryView(APIView):
+    permission_classes =[IsAuthenticated]
+
+    def get(self,request,emp_id):
+        leaves=Leave.objects.filter(employee__id=emp_id,status='approved')
+        summary=leaves.values('leave_type').annotate(count=Count('id'))
+        total=leaves.count()
+        return Response({
+            'total': total,
+            'summary': summary
+        })

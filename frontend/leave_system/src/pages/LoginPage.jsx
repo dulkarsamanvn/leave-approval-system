@@ -16,6 +16,10 @@ function LoginPage() {
         { email, password },
         { withCredentials: true }
       )
+      
+      localStorage.setItem('isAuthenticated', 'true')
+      localStorage.setItem('role', res.data.role)
+
       toast.success('Login Successful')
 
       if (res.data.role === 'manager') {

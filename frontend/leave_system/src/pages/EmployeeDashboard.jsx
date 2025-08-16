@@ -21,8 +21,10 @@ function EmployeeDashboard() {
   const handleLogout = async () => {
     try {
       await axiosInstance.post("/accounts/logout/")
+      localStorage.removeItem('isAuthenticated')
+      localStorage.removeItem('role')
       toast.success("logged out successfully")
-      navigate("/login")
+      navigate("/login",{replace:true})
     } catch (err) {
       console.error("error logging out", err)
       toast.error("error logging out")
