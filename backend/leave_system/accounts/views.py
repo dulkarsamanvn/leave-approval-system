@@ -69,9 +69,9 @@ class RefreshTokenView(APIView):
                 key='access_token',
                 value=access_token,
                 max_age= 60 * 5,
-                secure=False,
+                secure=True,
                 httponly= True,
-                samesite='Lax'
+                samesite='None'
             )
             return response
         except TokenError:
