@@ -31,18 +31,18 @@ class LoginPageView(APIView):
             key='access_token',
             value=access_token,
             max_age= 60 * 5,
-            secure=False,
+            secure=True,
             httponly= True,
-            samesite='Lax'
+            samesite='None'
         )
 
         response.set_cookie(
             key='refresh_token',
             value=refresh_token,
             max_age= 60 * 60 * 24 * 7,
-            secure=False,
+            secure=True,
             httponly= True,
-            samesite='Lax'
+            samesite='None'
         )
 
         return response
