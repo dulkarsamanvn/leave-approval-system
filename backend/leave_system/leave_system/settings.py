@@ -69,6 +69,7 @@ REST_FRAMEWORK = {
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173", 
+    "https://leave-approval-system-1.onrender.com", 
 ]
 
 ROOT_URLCONF = 'leave_system.urls'
