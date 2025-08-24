@@ -2,6 +2,8 @@ import { useEffect, useState } from "react"
 import toast from "react-hot-toast"
 import { useNavigate } from "react-router-dom"
 import axiosInstance from "../api/axiosInstance"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import Spinner from "../components/Spinner"
 
 function EmployeeDashboard() {
   const [openModal, setOpenModal] = useState(false)
@@ -10,7 +12,12 @@ function EmployeeDashboard() {
   const [endDate, setEndDate] = useState("")
   const [reason, setReason] = useState("")
   const [leaves, setLeaves] = useState([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [count, setCount] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+
+  const LEAVES_PER_PAGE = 5
 
   const types = [
     { value: "annual", label: "Annual" },
@@ -24,7 +31,7 @@ function EmployeeDashboard() {
       localStorage.removeItem('isAuthenticated')
       localStorage.removeItem('role')
       toast.success("logged out successfully")
-      navigate("/login",{replace:true})
+      navigate("/login", { replace: true })
     } catch (err) {
       console.error("error logging out", err)
       toast.error("error logging out")
@@ -33,10 +40,18 @@ function EmployeeDashboard() {
 
   const fetchLeaves = async () => {
     try {
-      const res = await axiosInstance.get("/leave/all-leaves/")
+      setIsLoading(true)
+      const params = {
+        page: currentPage,
+        page_size: LEAVES_PER_PAGE
+      }
+      const res = await axiosInstance.get("/leave/all-leaves/", { params })
       setLeaves(res.data.leaves)
+      setCount(res.data.count)
     } catch (err) {
       console.error("error fetching leaves", err)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -77,7 +92,82 @@ function EmployeeDashboard() {
 
   useEffect(() => {
     fetchLeaves()
-  }, [])
+  }, [currentPage])
+
+  const total_pages = Math.ceil(count / LEAVES_PER_PAGE)
+
+  const renderPaginationButtons = () => {
+    const buttons = []
+    const maxVisiblePages = 5
+
+    // Previous button
+    buttons.push(
+      <button
+        key="prev"
+        onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+        disabled={currentPage === 1}
+        className="px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </button>,
+    )
+
+    // Page numbers
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
+    const endPage = Math.min(total_pages, startPage + maxVisiblePages - 1)
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1)
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      buttons.push(
+        <button
+          key={i}
+          onClick={() => setCurrentPage(i)}
+          className={`px-3 py-2 rounded-lg transition-colors ${currentPage === i ? "bg-slate-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-700"
+            }`}
+        >
+          {i}
+        </button>,
+      )
+    }
+
+    // Show ellipsis and last page if needed
+    if (endPage < total_pages) {
+      if (endPage < total_pages - 1) {
+        buttons.push(
+          <span key="ellipsis" className="px-3 py-2 text-slate-400">
+            ...
+          </span>,
+        )
+      }
+
+      buttons.push(
+        <button
+          key={total_pages}
+          onClick={() => setCurrentPage(total_pages)}
+          className="px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+        >
+          {total_pages}
+        </button>,
+      )
+    }
+
+    // Next button
+    buttons.push(
+      <button
+        key="next"
+        onClick={() => setCurrentPage((prev) => Math.min(total_pages, prev + 1))}
+        disabled={currentPage === total_pages}
+        className="px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        <ChevronRight className="w-4 h-4" />
+      </button>,
+    )
+
+    return buttons
+  }
 
   return (
     <div className="min-h-screen bg-[rgb(47,82,73)]">
@@ -111,7 +201,10 @@ function EmployeeDashboard() {
             <h2 className="text-xl font-semibold text-gray-800">Leave History</h2>
           </div>
 
-          {leaves.length === 0 ? (
+          {isLoading ? (
+            <Spinner />
+          ) : (<div>
+            {leaves.length === 0 ? (
             <div className="px-6 py-12 text-center">
               <div className="text-gray-400 text-lg">No leave requests found</div>
               <p className="text-gray-500 mt-2">Click "Apply Leave" to submit your first request</p>
@@ -164,8 +257,13 @@ function EmployeeDashboard() {
               </table>
             </div>
           )}
+          </div>
+          )}
         </div>
       </div>
+      {!isLoading && total_pages > 1 && leaves.length > 0 && (
+        <div className="flex items-center justify-center mt-8 gap-1">{renderPaginationButtons()}</div>
+      )}
 
       {/* Modal */}
       {openModal && (

@@ -2,7 +2,10 @@ import axios from "axios";
 
 
 const axiosInstance=axios.create({
-    baseURL:'https://leave-approval-system.onrender.com',
+    baseURL:
+     import.meta.env.MODE === "development"
+      ? "http://127.0.0.1:8000"
+      : "https://leave-approval-system.onrender.com",
     withCredentials:true
 })
 

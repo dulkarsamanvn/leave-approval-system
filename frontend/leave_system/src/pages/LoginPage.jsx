@@ -2,17 +2,25 @@ import React, { useState } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
+import Spinner from '../components/Spinner'
 
 function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [isLoading,setIsLoading]=useState(false)
   const navigate = useNavigate()
+
+  const API_BASE =
+    import.meta.env.MODE === 'development'
+      ? 'http://127.0.0.1:8000'
+      : 'https://leave-approval-system.onrender.com'
 
   const handleLogin = async (e) => {
     e.preventDefault()
     try {
+      setIsLoading(true)
       const res = await axios.post(
-        'https://leave-approval-system.onrender.com/accounts/login/',
+        `${API_BASE}/accounts/login/`,
         { email, password },
         { withCredentials: true }
       )
@@ -31,6 +39,8 @@ function LoginPage() {
     } catch (err) {
       console.error('error while logging', err)
       toast.error('Login Failed')
+    }finally{
+      isLoading(false)
     }
   }
 
@@ -64,7 +74,7 @@ function LoginPage() {
           type="submit"
           className="w-full bg-[rgb(151,176,103)] text-white py-3 rounded-lg font-semibold hover:bg-[rgb(151,176,103)]-400 transition duration-200"
         >
-          Login
+          {isLoading? <Spinner/> : "Login"}
         </button>
       </form>
     </div>
