@@ -7,6 +7,7 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken,TokenError
 from django.http import JsonResponse
 from rest_framework.permissions import IsAuthenticated
+from accounts.serializers import CreateEmployeeSerializer
 
 
 class LoginPageView(APIView):
@@ -50,10 +51,17 @@ class LoginPageView(APIView):
 
 class LogoutView(APIView):
     def post(self,request):
-        response=JsonResponse({'message':'Logout Successful'})
-        response.delete_cookie('access_token')
-        response.delete_cookie('refresh_token')
-        return response
+        try:
+            refresh_token=request.COOKIES.get('refresh_token')
+            if refresh_token:
+                token=RefreshToken(refresh_token)
+                token.blacklist()
+            response=JsonResponse({'message':'Logout Successful'})
+            response.delete_cookie('access_token')
+            response.delete_cookie('refresh_token')
+            return response
+        except TokenError:
+            return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RefreshTokenView(APIView):
@@ -78,3 +86,12 @@ class RefreshTokenView(APIView):
             return Response({'detail':'Invalid refresh token'},status=status.HTTP_403_FORBIDDEN)
 
 
+class CreateEmployeeView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def post(self,request):
+        serializer=CreateEmployeeSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message':'Employee Added successfully'},status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)

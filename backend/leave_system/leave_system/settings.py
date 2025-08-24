@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'leave',
 
     'corsheaders',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
