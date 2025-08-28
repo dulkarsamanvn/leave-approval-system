@@ -22,7 +22,7 @@ axiosInstance.interceptors.response.use(
     async(error)=>{
         const originalRequest=error.config
 
-        if(error.response?.status===401 && !originalRequest._retry && !originalRequest.url.includes('/accounts/refresh-token/')){
+        if((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry && !originalRequest.url.includes('/accounts/refresh-token/')){
             originalRequest._retry=true
             try{
                 await axiosInstance.post('/accounts/refresh-token/')

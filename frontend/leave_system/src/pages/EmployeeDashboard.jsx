@@ -25,6 +25,7 @@ function EmployeeDashboard() {
     { value: "casual", label: "Casual" },
   ]
 
+
   const handleLogout = async () => {
     try {
       await axiosInstance.post("/accounts/logout/")
@@ -55,7 +56,34 @@ function EmployeeDashboard() {
     }
   }
 
+
+  const isOverLapping=(newStart,newEnd)=>{
+    return leaves.some(leave=>{
+      const existingStart=new Date(leave.start_date)
+      const existingEnd=new Date(leave.end_date)
+      return (
+        (newStart <= existingEnd && newEnd >=existingStart)
+      )
+    })
+  }
+
   const handleLeave = async () => {
+    if(new Date(endDate) < new Date(startDate)){
+      toast.error('End date cannot be before start date')
+      return
+    }
+
+    if(new Date(startDate) < new Date().setHours(0, 0, 0, 0)){
+      toast.error('start date cannot be in the past')
+      return
+    }
+
+    if (isOverLapping(new Date(startDate), new Date(endDate))){
+      toast.error("You already have a leave during these dates!");
+      return
+    }
+
+
     try {
       const res = await axiosInstance.post("/leave/request-leave/", {
         leave_type: leaveType,
@@ -168,6 +196,8 @@ function EmployeeDashboard() {
 
     return buttons
   }
+
+  
 
   return (
     <div className="min-h-screen bg-[rgb(47,82,73)]">
