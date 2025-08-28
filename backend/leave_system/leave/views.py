@@ -7,13 +7,14 @@ from rest_framework import status
 from leave.models import Leave
 from django.db.models import Count,Sum,ExpressionWrapper,F,fields
 from django.core.paginator import Paginator
-# Create your views here.
 
+
+#view to apply leave request
+#checks if the leave overlap
 class ApplyLeaveRequestView(APIView):
     permission_classes=[IsAuthenticated]
 
     def post(self,request):
-        print('request reached ')
         serializer=ApplyLeaveSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(employee=request.user)
@@ -21,6 +22,10 @@ class ApplyLeaveRequestView(APIView):
         else:
             return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
+
+#view to retreive all the leaves.
+#if employee, then shows all the leave requests of his/her.
+#if manager, then shows all the leave requests
 class GetLeavesView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -41,7 +46,7 @@ class GetLeavesView(APIView):
             'count':paginator.count
         })
         
-
+#view to update the status of the leave requests
 class UpdateStatusView(APIView):
     permission_classes =[IsAuthenticated]
 
@@ -59,7 +64,7 @@ class UpdateStatusView(APIView):
         return Response({'message':'Leave updated successfully'})
 
 
-
+# view to get summary view of the leave the employee has taken
 class EmployeeLeaveSummaryView(APIView):
     permission_classes =[IsAuthenticated]
 

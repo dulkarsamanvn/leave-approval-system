@@ -9,7 +9,8 @@ from django.http import JsonResponse
 from rest_framework.permissions import IsAuthenticated
 from accounts.serializers import CreateEmployeeSerializer
 
-
+#view to login either as employee or as manager
+# here tokens are set in http only cookie
 class LoginPageView(APIView):
     def post(self,request):
         email=request.data.get('email')
@@ -48,7 +49,8 @@ class LoginPageView(APIView):
 
         return response
 
-
+#view to logout
+#cookie gets deleted when logout
 class LogoutView(APIView):
     def post(self,request):
         try:
@@ -71,6 +73,7 @@ class RefreshTokenView(APIView):
             return Response({'detail':'Refresh Token Missing'},status=status.HTTP_401_UNAUTHORIZED)
         try:
             refresh=RefreshToken(refresh_token)
+            new_refresh=str(refresh)
             access_token=str(refresh.access_token)
             response=JsonResponse({'message':'Token Refreshed'})
             response.set_cookie(
@@ -81,11 +84,19 @@ class RefreshTokenView(APIView):
                 httponly= True,
                 samesite='None'
             )
+            response.set_cookie(
+                key='refresh_token',
+                value=new_refresh,
+                max_age= 60 * 60 * 24 * 7,
+                secure=True,
+                httponly= True,
+                samesite='None'
+            )
             return response
         except TokenError:
             return Response({'detail':'Invalid refresh token'},status=status.HTTP_403_FORBIDDEN)
 
-
+#view to create employee from manager side
 class CreateEmployeeView(APIView):
     permission_classes=[IsAuthenticated]
 
